@@ -253,5 +253,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout NewProjectAudioProcessor::cr
     //create our paramters
     //add them to the vector
     
+    std::function<juce::String(float, int)> valueToTextFunction = [](float x, int l) { return juce::String(x, 4); };
+    std::function<float(const juce::String&)> textToValueFunction = [](const juce::String& str) { return str.getFloatValue(); };
+    
+    auto gainParam = std::make_unique<juce::AudioParameterFloat>("VOL", "Volume", juce::NormalisableRange< float > (-40.0f, 40.0f), 0.0f, "dB", juce::AudioProcessorParameter::genericParameter, valueToTextFunction, textToValueFunction);
+    
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat>("VOL", "Volume", juce::NormalisableRange< float > (-40.0f, 40.0f), 0.0f, "dB", juce::AudioProcessorParameter::genericParameter, valueToTextFunction, textToValueFunction));
+    
     return { parameters.begin(), parameters.end() };
 }
