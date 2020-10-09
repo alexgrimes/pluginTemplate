@@ -171,8 +171,14 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
+        
+        for (int sample = 0; sample < buffer.getNumSamples(); ++ sample)
+        {
+            //Hard clip values
+            channelData[sample] = juce::jlimit (-1.0f, 1.0f, channelData[sample]);
+        }
 
-        // ..do something to the data...
+        
     }
 }
 
