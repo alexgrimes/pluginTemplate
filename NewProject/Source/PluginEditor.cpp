@@ -46,8 +46,22 @@ NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
 //==============================================================================
 void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    auto bounds = getLocalBounds();
+    auto textBounds = bounds.removeFromTop (40);
+    
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.setColour (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillRect(bounds);
+    
+    
+    //background
+    g.setColour(juce::Colours::black);
+    g.fillRect (bounds);
+    
+    //text
+    g.setColour (juce::Colours::white);
+    g.setFont (juce::Font (20.0f).italicised().withExtraKerningFactor (0.1f));
+    g.drawFittedText("DSP Lesson 1", textBounds, juce::Justification::centredLeft, 1);
 
 //    g.setColour (juce::Colours::white);
 //    g.setFont (15.0f);
