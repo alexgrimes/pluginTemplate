@@ -25,6 +25,11 @@ public:
     void resized() override;
 
 private:
+    
+    std::unique_ptr<juce::Slider> volumeSlider, lpfSlider;
+    std::unique_ptr<juce::Label> volumeLabel, lpfLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeAttachment, lpfAttachment;
+    
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     NewProjectAudioProcessor& audioProcessor;
