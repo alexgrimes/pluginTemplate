@@ -152,6 +152,8 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    
+    auto numSamples = buffer.getNumSamples();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -160,7 +162,9 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear (i, 0, numSamples);
+    
+    
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -172,8 +176,14 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     {
         auto* channelData = buffer.getWritePointer (channel);
         
+        iirFilter[channel].processSamples(channelData, numSamples);
+        
+        outputVolume[channel].applyGain (channelData, numSamples);
+        
         for (int sample = 0; sample < buffer.getNumSamples(); ++ sample)
         {
+            
+            
             //Hard clip values
             channelData[sample] = juce::jlimit (-1.0f, 1.0f, channelData[sample]);
         }
@@ -190,7 +200,7 @@ bool NewProjectAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* NewProjectAudioProcessor::createEditor()
 {
-    return new NewProjectAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
@@ -239,11 +249,28 @@ void NewProjectAudioProcessor::update()
     //update DSP when user changes params
     
     mustUpdateProcessing = false;
+    
+    
+    auto frequency = apvts.getRawParameterValue("LPF");
+    auto volume = apvts.getRawParameterValue("VOL");
+    
+    
+    for (int channel = 0; channel < 2; ++channel)
+    {
+        iirFilter[channel].setCoefficients (juce::IIRCoefficients::makeLowPass(getSampleRate(), frequency->load()));
+        outputVolume[channel].setTargetValue (juce::Decibels::decibelsToGain (volume->load()));
+    }
 }
 
 void NewProjectAudioProcessor::reset()
 {
     //reset DSP params
+    
+    for (int channel = 0; channel < 2; ++channel)
+    {
+        iirFilter[channel].reset();
+        outputVolume[channel].reset (getSampleRate(), 0.050);
+    }
 }
 
 //void NewProjectAudioProcessor::userChangedParameter()
@@ -264,7 +291,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout NewProjectAudioProcessor::cr
     
     auto gainParam = std::make_unique<juce::AudioParameterFloat>("VOL", "Volume", juce::NormalisableRange< float > (-40.0f, 40.0f), 0.0f, "dB", juce::AudioProcessorParameter::genericParameter, valueToTextFunction, textToValueFunction);
     
+    //filter/////////////////////
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat>("LPF", "Low Pass Filter", juce::NormalisableRange<float> (20.0f, 22000.0f, 10.0f, 0.2f), 800.0f, "Hz", juce::AudioProcessorParameter::genericParameter, valueToTextFunction, textToValueFunction));
+    
     parameters.push_back (std::make_unique<juce::AudioParameterFloat>("VOL", "Volume", juce::NormalisableRange< float > (-40.0f, 40.0f), 0.0f, "dB", juce::AudioProcessorParameter::genericParameter, valueToTextFunction, textToValueFunction));
+    
+    
     
     return { parameters.begin(), parameters.end() };
 }

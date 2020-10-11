@@ -70,6 +70,11 @@ public:
 private:
     bool mustUpdateProcessing { false };
     bool isActive { false };
+    //float outputVolume { 0.0 };
+    
+    juce::IIRFilter iirFilter [2];
+    
+    juce::LinearSmoothedValue<float> outputVolume [2] { 0.0 };
     
     void valueTreePropertyChanged (juce::ValueTree &treeWhosePropertyHasChanged, const juce::Identifier &property) override
     {
