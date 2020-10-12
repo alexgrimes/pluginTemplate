@@ -78,17 +78,18 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::Font (20.0f).italicised().withExtraKerningFactor (0.1f));
     g.drawFittedText("DSP Lesson 1", textBounds, juce::Justification::centredLeft, 1);
     
+    auto hasClipped = juce::Decibels::gainToDecibels (audioProcessor.meterGlobalMaxVal.load()) >= 0.0f ? true: false;
     auto dbValue = juce::Decibels::gainToDecibels (audioProcessor.meterLocalMaxVal.load(), -100.0f);
     dbValue = juce::jlimit (-100.0f, 0.0f, dbValue);
     
     auto meter = bounds.removeFromRight (40);
     meter.reduce (10, 10);
     
-    g.setColour(juce::Colours::black.withAlpha (0.5f));
+    g.setColour (juce::Colours::black.withAlpha (0.5f));
     g.fillRect (meter);
     
     meter.removeFromTop (meter.getHeight() * -dbValue / 100.0f);
-    g.setColour (juce::Colours::green.brighter());
+    g.setColour (hasClipped? juce::Colours::red : juce::Colours::green.brighter());
     g.fillRect (meter);
 
 //    g.setColour (juce::Colours::white);
@@ -167,4 +168,17 @@ void NewProjectAudioProcessorEditor::buttonClicked(juce::Button* button)
 void NewProjectAudioProcessorEditor::timerCallback()
 {
     repaint();
+}
+
+void NewProjectAudioProcessorEditor::mouseDown(const juce::MouseEvent& e)
+{
+    auto bounds = getLocalBounds();
+    bounds.removeFromTop (40);
+    auto meter = bounds.removeFromRight (40);
+    
+    if (meter.contains(e.getMouseDownPosition()))
+    {
+        audioProcessor.meterGlobalMaxVal.store (0.0f);
+    }
+    
 }

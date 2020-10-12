@@ -25,6 +25,7 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    void mouseDown (const juce::MouseEvent& e) override;
     
     void buttonClicked (juce::Button* button) override;
     void timerCallback() override;
