@@ -14,7 +14,8 @@
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor
+class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                        public juce::Button::Listener
 {
 public:
     NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
@@ -23,12 +24,20 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    void buttonClicked (juce::Button* button) override;
 
 private:
     
     std::unique_ptr<juce::Slider> volumeSlider, lpfSlider;
     std::unique_ptr<juce::Label> volumeLabel, lpfLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeAttachment, lpfAttachment;
+    std::unique_ptr<juce::TextButton> lookAndFeelButton;
+    
+    juce::LookAndFeel_V4 theLFDark, theLFMid, theLFGrey, theLFLight;
+    juce::LookAndFeel_V3 theLFV3;
+    juce::LookAndFeel_V2 theLFV2;
+    int currentLF = 1;
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

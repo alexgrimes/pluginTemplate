@@ -30,9 +30,20 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     addAndMakeVisible(lpfSlider.get());
     lpfAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "LPF", *lpfSlider);
     lpfLabel = std::make_unique<juce::Label>("", "Low-Pass");
-    addAndMakeVisible(lpfLabel.get());
+    addAndMakeVisible (lpfLabel.get());
     lpfLabel->attachToComponent (lpfSlider.get(), false);
-    lpfLabel->setJustificationType(juce::Justification::centred);
+    lpfLabel->setJustificationType (juce::Justification::centred);
+    
+    lookAndFeelButton = std::make_unique<juce::TextButton>("LookAndFeel");
+    addAndMakeVisible (lookAndFeelButton.get());
+    lookAndFeelButton->addListener (this);
+    
+    theLFDark.setColourScheme (juce::LookAndFeel_V4::getDarkColourScheme());
+    theLFMid.setColourScheme (juce::LookAndFeel_V4::getMidnightColourScheme());
+    theLFGrey.setColourScheme (juce::LookAndFeel_V4::getGreyColourScheme());
+    theLFLight.setColourScheme (juce::LookAndFeel_V4::getLightColourScheme());
+    
+    juce::LookAndFeel::setDefaultLookAndFeel (&theLFDark);
     
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -41,6 +52,7 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
 {
+    juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
 }
 
 //==============================================================================
@@ -74,8 +86,11 @@ void NewProjectAudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     auto bounds = getLocalBounds();
-    bounds.removeFromTop (40);
+    auto rectTop = bounds.removeFromTop (40);
     bounds.reduce (40, 40);
+    
+    rectTop.reduce (10, 0);
+    lookAndFeelButton->setBounds(rectTop.removeFromRight (120).withSizeKeepingCentre (120, 24));
     
     juce::Grid grid;
     using Track = juce::Grid::TrackInfo;
@@ -90,4 +105,44 @@ void NewProjectAudioProcessorEditor::resized()
     grid.rowGap = juce::Grid::Px (10);
     
     grid.performLayout (bounds);
+}
+
+void NewProjectAudioProcessorEditor::buttonClicked(juce::Button* button)
+{
+        if (button == lookAndFeelButton.get())
+        {
+            juce::PopupMenu m;
+            
+            m.addItem (1, "Dark look and feel", true, currentLF == 1);
+            m.addItem (2, "Midnight look and feel", true, currentLF == 2);
+            m.addItem (3, "Grey look and feel", true, currentLF == 3);
+            m.addItem (4, "Light look and feel", true, currentLF == 4);
+            
+            m.addSeparator();
+            m.addItem (5, "JUCE 4 look and feel", true, currentLF == 5);
+            m.addItem (6, "JUCE 3 look and feel", true, currentLF == 6);
+            
+            auto result = m.showAt(lookAndFeelButton.get());
+            
+            if (result == 1)
+                juce::LookAndFeel::setDefaultLookAndFeel (&theLFDark);
+            
+            else if (result == 2)
+                juce::LookAndFeel::setDefaultLookAndFeel (&theLFMid);
+            
+            else if (result == 3)
+                juce::LookAndFeel::setDefaultLookAndFeel (&theLFGrey);
+            
+            else if (result == 4)
+                juce::LookAndFeel::setDefaultLookAndFeel(&theLFLight);
+            
+            else if (result == 5)
+                juce::LookAndFeel::setDefaultLookAndFeel (&theLFV3);
+            
+            else if (result == 6)
+                juce::LookAndFeel::setDefaultLookAndFeel (&theLFV2);
+            
+            if (result != 0)
+                currentLF = result;
+        }
 }
