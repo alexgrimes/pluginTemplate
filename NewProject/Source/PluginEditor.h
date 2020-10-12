@@ -15,7 +15,8 @@
 /**
 */
 class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                        public juce::Button::Listener
+                                        public juce::Button::Listener,
+                                        public juce::Timer
 {
 public:
     NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
@@ -26,6 +27,7 @@ public:
     void resized() override;
     
     void buttonClicked (juce::Button* button) override;
+    void timerCallback() override;
 
 private:
     

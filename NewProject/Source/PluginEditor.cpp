@@ -45,6 +45,8 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     
     juce::LookAndFeel::setDefaultLookAndFeel (&theLFDark);
     
+    juce::Timer::startTimerHz (30.0);
+    
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (400, 300);
@@ -53,6 +55,7 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
 {
     juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
+    juce::Timer::stopTimer();
 }
 
 //==============================================================================
@@ -74,6 +77,19 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white);
     g.setFont (juce::Font (20.0f).italicised().withExtraKerningFactor (0.1f));
     g.drawFittedText("DSP Lesson 1", textBounds, juce::Justification::centredLeft, 1);
+    
+    auto dbValue = juce::Decibels::gainToDecibels (audioProcessor.meterLocalMaxVal.load(), -100.0f);
+    dbValue = juce::jlimit (-100.0f, 0.0f, dbValue);
+    
+    auto meter = bounds.removeFromRight (40);
+    meter.reduce (10, 10);
+    
+    g.setColour(juce::Colours::black.withAlpha (0.5f));
+    g.fillRect (meter);
+    
+    meter.removeFromTop (meter.getHeight() * -dbValue / 100.0f);
+    g.setColour (juce::Colours::green.brighter());
+    g.fillRect (meter);
 
 //    g.setColour (juce::Colours::white);
 //    g.setFont (15.0f);
@@ -87,6 +103,7 @@ void NewProjectAudioProcessorEditor::resized()
     
     auto bounds = getLocalBounds();
     auto rectTop = bounds.removeFromTop (40);
+    bounds.removeFromRight (40);
     bounds.reduce (40, 40);
     
     rectTop.reduce (10, 0);
@@ -145,4 +162,9 @@ void NewProjectAudioProcessorEditor::buttonClicked(juce::Button* button)
             if (result != 0)
                 currentLF = result;
         }
+}
+
+void NewProjectAudioProcessorEditor::timerCallback()
+{
+    repaint();
 }

@@ -154,6 +154,10 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
     auto numSamples = buffer.getNumSamples();
+    auto numChannels = juce::jmin (totalNumInputChannels, totalNumOutputChannels);
+    
+    auto sumMaxVal = 0.0f;
+    auto currentMaxVal = meterGlobalMaxVal.load();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -175,10 +179,35 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
+        auto channelMaxVal = 0.0f;
         
         iirFilter[channel].processSamples(channelData, numSamples);
         
         outputVolume[channel].applyGain (channelData, numSamples);
+        
+        //absolute value of all samples in a buffer
+        //is the current sample larger than the current max?
+            //if yes --  channelMaxVal = new max
+        
+        
+        //find max val in this channel / buffer of samples
+        
+        
+        
+        for (int sample = 0; sample < numSamples ; ++sample)
+        {
+            auto rectifiedVal = std::abs (channelData[sample]);
+            
+            if (channelMaxVal < rectifiedVal)
+                channelMaxVal = rectifiedVal;
+            
+            if (currentMaxVal < rectifiedVal)
+                currentMaxVal = rectifiedVal;
+        }
+        
+        sumMaxVal += channelMaxVal; //sum of ch 0 and ch 1 max vals
+        
+        meterGlobalMaxVal.store (currentMaxVal);
         
         for (int sample = 0; sample < buffer.getNumSamples(); ++ sample)
         {
@@ -190,6 +219,8 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         
     }
+    
+    meterLocalMaxVal.store (sumMaxVal / (float)numChannels);
 }
 
 //==============================================================================
@@ -271,6 +302,9 @@ void NewProjectAudioProcessor::reset()
         iirFilter[channel].reset();
         outputVolume[channel].reset (getSampleRate(), 0.050);
     }
+    
+    meterLocalMaxVal.store (0.0f);
+    meterGlobalMaxVal.store (0.0f);
 }
 
 //void NewProjectAudioProcessor::userChangedParameter()

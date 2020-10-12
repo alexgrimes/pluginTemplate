@@ -63,6 +63,7 @@ public:
     
     juce::AudioProcessorValueTreeState apvts;
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+    std::atomic<float> meterLocalMaxVal, meterGlobalMaxVal;
     
     
 
